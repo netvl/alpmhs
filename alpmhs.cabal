@@ -20,6 +20,7 @@ Library
     Extra-Libraries:   alpm
     Hs-Source-Dirs:    lib
     Exposed-Modules:   Distribution.ArchLinux.Libalpm, Distribution.ArchLinux.Libalpm.Raw
+    Extensions:        ForeignFunctionInterface
 
 Executable halp
     Build-Depends:     base >= 4.5, alpmhs
