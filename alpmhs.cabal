@@ -1,0 +1,27 @@
+Name:                alpmhs
+-- PVP summary:      +-+------- breaking API changes
+--                   | | +----- non-breaking API additions
+--                   | | | +--- code changes with no API change
+Version:             0.1.0.0
+Synopsis:            ArchLinux Package Management library wrapper and its frontend
+Homepage:            https://github.com/dpx-infinity/alpmhs
+Bug-Reports:         https://github.com/dpx-infinity/alpmhs/issues
+License:             BSD3
+License-File:        LICENSE
+Author:              Vladimir Matveev
+Maintainer:          Vladimir Matveev <dpx.infinity@gmail.com>
+Category:            Distribution
+Build-Type:          Simple
+Cabal-Version:       >=1.8
+
+
+Library
+    Build-Depends:     base >= 4.5
+    Extra-Libraries:   alpm
+    Hs-Source-Dirs:    lib
+    Exposed-Modules:   Distribution.ArchLinux.Libalpm
+
+Executable halp
+    Build-Depends:     base >= 4.5, alpmhs
+    Hs-Source-Dirs:    bin
+    Main-Is:           Main.hs
