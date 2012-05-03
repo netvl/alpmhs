@@ -19,7 +19,14 @@ Library
     Build-Depends:     base >= 4.5, bindings-DSL -any
     Extra-Libraries:   alpm
     Hs-Source-Dirs:    lib
-    Exposed-Modules:   Distribution.ArchLinux.Libalpm, Distribution.ArchLinux.Libalpm.Raw
+    Exposed-Modules:   Distribution.ArchLinux.Libalpm
+                     , Distribution.ArchLinux.Libalpm.Raw
+                     , Distribution.ArchLinux.Libalpm.Raw.Types
+                     , Distribution.ArchLinux.Libalpm.Raw.Options
+                     , Distribution.ArchLinux.Libalpm.Raw.Database
+                     , Distribution.ArchLinux.Libalpm.Raw.Packages
+                     , Distribution.ArchLinux.Libalpm.Raw.Transactions
+                     , Distribution.ArchLinux.Libalpm.Raw.Misc                     
     Extensions:        ForeignFunctionInterface
 
 Executable halp
