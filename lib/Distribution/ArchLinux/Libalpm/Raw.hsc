@@ -494,7 +494,7 @@ import System.Posix.Types
 
 #ccall alpm_siglist_cleanup , Ptr <alpm_siglist_t> -> IO CInt
 
-#ccall alpm_find_groups_pkg , Ptr <alpm_list_t> -> CString -> IO (Ptr <alpm_list_t>)
+#ccall alpm_find_group_pkgs , Ptr <alpm_list_t> -> CString -> IO (Ptr <alpm_list_t>)
 
 #ccall alpm_sync_newversion , Ptr <alpm_pkg_t> -> Ptr <alpm_list_t> -> IO (Ptr <alpm_list_t>)
 
