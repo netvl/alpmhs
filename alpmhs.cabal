@@ -27,7 +27,10 @@ Library
                      , Distribution.ArchLinux.Libalpm.Raw.Database
                      , Distribution.ArchLinux.Libalpm.Raw.Packages
                      , Distribution.ArchLinux.Libalpm.Raw.Transactions
-                     , Distribution.ArchLinux.Libalpm.Raw.Misc                     
+                     , Distribution.ArchLinux.Libalpm.Raw.Misc
+                     , Distribution.ArchLinux.Libalpm.Raw.List
+                     , Distribution.ArchLinux.Libalpm.Wrapper
+                     , Distribution.ArchLinux.Libalpm.Wrapper.List
     Extensions:        ForeignFunctionInterface
 
 Executable halp
