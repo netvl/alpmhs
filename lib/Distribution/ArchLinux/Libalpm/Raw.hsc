@@ -17,6 +17,11 @@ import System.Posix.Types
 #num ALPM_PKG_REASON_EXPLICIT
 #num ALPM_PKG_REASON_DEPEND
 
+#integral_t alpm_pkgfrom_t
+#num PKG_FROM_FILE
+#num PKG_FROM_LOCALDB
+#num PKG_FROM_SYNCDB
+
 #integral_t alpm_depmod_t
 #num ALPM_DEP_MOD_ANY
 #num ALPM_DEP_MOD_EQ
@@ -53,6 +58,84 @@ import System.Posix.Types
 #num ALPM_SIGVALIDITY_MARGINAL
 #num ALPM_SIGVALIDITY_NEVER
 #num ALPM_SIGVALIDITY_UNKNOWN
+
+#integral_t alpm_transflag_t
+#num ALPM_TRANS_FLAG_NODEPS
+#num ALPM_TRANS_FLAG_FORCE
+#num ALPM_TRANS_FLAG_NOSAVE
+#num ALPM_TRANS_FLAG_NODEPVERSION
+#num ALPM_TRANS_FLAG_CASCADE
+#num ALPM_TRANS_FLAG_RECURSE
+#num ALPM_TRANS_FLAG_DBONLY
+#num ALPM_TRANS_FLAG_ALLDEPS
+#num ALPM_TRANS_FLAG_DOWNLOADONLY
+#num ALPM_TRANS_FLAG_NOSCRIPTLET
+#num ALPM_TRANS_FLAG_NOCONFLICTS
+#num ALPM_TRANS_FLAG_NEEDED
+#num ALPM_TRANS_FLAG_ALLEXPLICIT
+#num ALPM_TRANS_FLAG_UNNEEDED
+#num ALPM_TRANS_FLAG_RECURSEALL
+#num ALPM_TRANS_FLAG_NOLOCK
+
+#integral_t enum _alpm_errno_t
+#num ALPM_ERR_MEMORY
+#num ALPM_ERR_SYSTEM
+#num ALPM_ERR_BADPERMS
+#num ALPM_ERR_NOT_A_FILE
+#num ALPM_ERR_NOT_A_DIR
+#num ALPM_ERR_WRONG_ARGS
+#num ALPM_ERR_DISK_SPACE
+#num ALPM_ERR_HANDLE_NULL
+#num ALPM_ERR_HANDLE_NOT_NULL
+#num ALPM_ERR_HANDLE_LOCK
+#num ALPM_ERR_DB_OPEN
+#num ALPM_ERR_DB_CREATE
+#num ALPM_ERR_DB_NULL
+#num ALPM_ERR_DB_NOT_NULL
+#num ALPM_ERR_DB_NOT_FOUND
+#num ALPM_ERR_DB_INVALID
+#num ALPM_ERR_DB_INVALID_SIG
+#num ALPM_ERR_DB_VERSION
+#num ALPM_ERR_DB_WRITE
+#num ALPM_ERR_DB_REMOVE
+#num ALPM_ERR_SERVER_BAD_URL
+#num ALPM_ERR_SERVER_NONE
+#num ALPM_ERR_TRANS_NOT_NULL
+#num ALPM_ERR_TRANS_NULL
+#num ALPM_ERR_TRANS_DUP_TARGET
+#num ALPM_ERR_TRANS_NOT_INITIALIZED
+#num ALPM_ERR_TRANS_NOT_PREPARED
+#num ALPM_ERR_TRANS_ABORT
+#num ALPM_ERR_TRANS_TYPE
+#num ALPM_ERR_TRANS_NOT_LOCKED
+#num ALPM_ERR_PKG_NOT_FOUND
+#num ALPM_ERR_PKG_IGNORED
+#num ALPM_ERR_PKG_INVALID
+#num ALPM_ERR_PKG_INVALID_CHECKSUM
+#num ALPM_ERR_PKG_INVALID_SIG
+#num ALPM_ERR_PKG_OPEN
+#num ALPM_ERR_PKG_CANT_REMOVE
+#num ALPM_ERR_PKG_INVALID_NAME
+#num ALPM_ERR_PKG_INVALID_ARCH
+#num ALPM_ERR_PKG_REPO_NOT_FOUND
+#num ALPM_ERR_SIG_MISSING
+#num ALPM_ERR_SIG_INVALID
+#num ALPM_ERR_DLT_INVALID
+#num ALPM_ERR_DLT_PATCHFAILED
+#num ALPM_ERR_UNSATISFIED_DEPS
+#num ALPM_ERR_CONFLICTING_DEPS
+#num ALPM_ERR_FILE_CONFLICTS
+#num ALPM_ERR_RETRIEVE
+#num ALPM_ERR_INVALID_REGEX
+#num ALPM_ERR_LIBARCHIVE
+#num ALPM_ERR_LIBCURL
+#num ALPM_ERR_EXTERNAL_DOWNLOAD
+#num ALPM_ERR_GPGME
+
+#integral_t enum alpm_caps
+#num ALPM_CAPABILITY_NLS
+#num ALPM_CAPABILITY_DOWNLOADER
+#num ALPM_CAPABILITY_SIGNATURES
 
 #opaque_t alpm_handle_t
 #opaque_t alpm_db_t
@@ -281,5 +364,192 @@ import System.Posix.Types
 #ccall alpm_option_set_ignoregroups , Ptr <alpm_handle_t> -> Ptr <alpm_list_t> -> IO CInt
 #ccall alpm_option_remove_ignoregroup , Ptr <alpm_handle_t> -> CString -> IO CInt
 
+#ccall alpm_option_get_arch , Ptr <alpm_handle_t> -> IO CString
+#ccall alpm_option_set_arch , Ptr <alpm_handle_t> -> CString -> IO CInt
+
+#ccall alpm_option_get_usedelta , Ptr <alpm_handle_t> -> IO CInt
+#ccall alpm_option_set_usedelta , Ptr <alpm_handle_t> -> CInt -> IO CInt
+
+#ccall alpm_option_get_checkspace , Ptr <alpm_handle_t> -> IO CInt
+#ccall alpm_option_set_checkspace , Ptr <alpm_handle_t> -> CInt -> IO CInt
+
+#ccall alpm_option_get_default_siglevel , Ptr <alpm_handle_t> -> IO <alpm_siglevel_t>
+#ccall alpm_option_set_default_siglevel , Ptr <alpm_handle_t> -> <alpm_siglevel_t> -> IO CInt
+
+#ccall alpm_option_get_localdb , Ptr <alpm_handle_t> -> IO (Ptr <alpm_db_t>)
+
+#ccall alpm_option_get_syncdbs , Ptr <alpm_handle_t> -> IO (Ptr <alpm_list_t>)
+
+#ccall alpm_db_register_sync , Ptr <alpm_handle_t> -> CString -> <alpm_siglevel_t> -> IO (Ptr <alpm_db_t>)
+
+#ccall alpm_db_unregister , Ptr <alpm_db_t> -> IO CInt
+
+#ccall alpm_db_unregister_all , Ptr <alpm_handle_t> -> IO CInt
+
+#ccall alpm_db_get_name , Ptr <alpm_db_t> -> IO CString
+
+#ccall alpm_db_get_siglevel , Ptr <alpm_db_t> -> IO <alpm_siglevel_t>
+
+#ccall alpm_db_get_valid , Ptr <alpm_db_t> -> IO CInt
+
+#ccall alpm_db_get_servers , Ptr <alpm_db_t> -> IO (Ptr <alpm_list_t>)
+#ccall alpm_db_set_servers , Ptr <alpm_db_t> -> Ptr <alpm_list_t> -> IO CInt
+#ccall alpm_db_add_server , Ptr <alpm_db_t> -> CString -> IO CInt
+#ccall alpm_db_remove_server , Ptr <alpm_db_t> -> CString -> IO CInt
+
+#ccall alpm_db_update , CInt -> Ptr <alpm_db_t> -> IO CInt
+
+#ccall alpm_db_get_pkg , Ptr <alpm_db_t> -> CString -> IO (Ptr <alpm_pkg_t>)
+
+#ccall alpm_db_get_pkgcache , Ptr <alpm_db_t> -> IO (Ptr <alpm_list_t>)
+
+#ccall alpm_db_readgroup , Ptr <alpm_db_t> -> CString -> IO (Ptr <alpm_group_t>)
+
+#ccall alpm_db_get_groupcache , Ptr <alpm_db_t> -> IO (Ptr <alpm_list_t>)
+
+#ccall alpm_db_search , Ptr <alpm_db_t> -> Ptr <alpm_list_t> -> IO (Ptr <alpm_list_t>)
+
+#ccall alpm_db_set_pkgreason , Ptr <alpm_handle_t> -> Ptr <alpm_pkg_t> -> <alpm_pkgreason_t> -> IO CInt
+
+
+#ccall alpm_pkg_load , Ptr <alpm_handle_t> -> CString -> CInt -> <alpm_siglevel_t> -> Ptr (Ptr <alpm_pkg_t>) -> IO CInt
+
+#ccall alpm_pkg_free , Ptr <alpm_pkg_t> -> IO CInt
+
+#ccall alpm_pkg_checkmd5sum , Ptr <alpm_pkg_t> -> IO CInt
+
+#ccall alpm_pkg_vercmp , CString -> CString -> IO CInt
+
+#ccall alpm_pkg_compute_requiredby , Ptr <alpm_pkg_t> -> IO (Ptr <alpm_list_t>)
+
+#ccall alpm_pkg_get_filename , Ptr <alpm_pkg_t> -> IO CString
+
+#ccall alpm_pkg_get_name , Ptr <alpm_pkg_t> -> IO CString
+
+#ccall alpm_pkg_get_version , Ptr <alpm_pkg_t> -> IO CString
+
+#ccall alpm_pkg_get_origin , Ptr <alpm_pkg_t> -> IO <alpm_pkgfrom_t>
+
+#ccall alpm_pkg_get_desc , Ptr <alpm_pkg_t> -> IO CString
+
+#ccall alpm_pkg_get_url , Ptr <alpm_pkg_t> -> IO CString
+
+#ccall alpm_pkg_get_builddate , Ptr <alpm_pkg_t> -> IO CTime
+
+#ccall alpm_pkg_get_installdate , Ptr <alpm_pkg_t> -> IO CTime
+
+#ccall alpm_pkg_get_packager , Ptr <alpm_pkg_t> -> IO CString
+
+#ccall alpm_pkg_get_md5sum , Ptr <alpm_pkg_t> -> IO CString
+
+#ccall alpm_pkg_get_sha256sum , Ptr <alpm_pkg_t> -> IO CString
+
+#ccall alpm_pkg_get_arch , Ptr <alpm_pkg_t> -> IO CString
+
+#ccall alpm_pkg_get_size , Ptr <alpm_pkg_t> -> IO COff
+
+#ccall alpm_pkg_get_isize , Ptr <alpm_pkg_t> -> IO COff
+
+#ccall alpm_pkg_get_reason , Ptr <alpm_pkg_t> -> IO <alpm_pkgreason_t>
+
+#ccall alpm_pkg_get_licenses , Ptr <alpm_pkg_t> -> IO (Ptr <alpm_list_t>)
+
+#ccall alpm_pkg_get_groups , Ptr <alpm_pkg_t> -> IO (Ptr <alpm_list_t>)
+
+#ccall alpm_pkg_get_depends , Ptr <alpm_pkg_t> -> IO (Ptr <alpm_list_t>)
+
+#ccall alpm_pkg_get_optdepends , Ptr <alpm_pkg_t> -> IO (Ptr <alpm_list_t>)
+
+#ccall alpm_pkg_get_conflicts , Ptr <alpm_pkg_t> -> IO (Ptr <alpm_list_t>)
+
+#ccall alpm_pkg_get_provides , Ptr <alpm_pkg_t> -> IO (Ptr <alpm_list_t>)
+
+#ccall alpm_pkg_get_deltas , Ptr <alpm_pkg_t> -> IO (Ptr <alpm_list_t>)
+
+#ccall alpm_pkg_get_replaces , Ptr <alpm_pkg_t> -> IO (Ptr <alpm_list_t>)
+
+#ccall alpm_pkg_get_files , Ptr <alpm_pkg_t> -> IO (Ptr <alpm_filelist_t>)
+
+#ccall alpm_pkg_get_backup , Ptr <alpm_pkg_t> -> IO (Ptr <alpm_list_t>)
+
+#ccall alpm_pkg_get_db , Ptr <alpm_pkg_t> -> IO (Ptr <alpm_db_t>)
+
+#ccall alpm_pkg_get_base64_sig , Ptr <alpm_pkg_t> -> IO CString
+
+#ccall alpm_pkg_changelog_open , Ptr <alpm_pkg_t> -> IO (Ptr ())
+
+#ccall alpm_pkg_changelog_read , Ptr () -> CSize -> Ptr <alpm_pkg_t> -> Ptr () -> IO CSize
+
+#ccall alpm_pkg_changelog_close , Ptr <alpm_pkg_t> -> Ptr () -> IO CInt
+
+#ccall alpm_pkg_has_scriptlet , Ptr <alpm_pkg_t> -> IO CInt
+
+#ccall alpm_pkg_download_size , Ptr <alpm_pkg_t> -> IO COff
+
+#ccall alpm_pkg_unused_deltas , Ptr <alpm_pkg_t> -> IO (Ptr <alpm_list_t>)
+
+#ccall alpm_pkg_check_pgp_signature , Ptr <alpm_pkg_t> -> Ptr <alpm_siglist_t> -> IO CInt
+
+#ccall alpm_db_check_pgp_signature , Ptr <alpm_db_t> -> Ptr <alpm_siglist_t> -> IO CInt
+
+#ccall alpm_siglist_cleanup , Ptr <alpm_siglist_t> -> IO CInt
+
+#ccall alpm_find_groups_pkg , Ptr <alpm_list_t> -> CString -> IO (Ptr <alpm_list_t>)
+
+#ccall alpm_sync_newversion , Ptr <alpm_pkg_t> -> Ptr <alpm_list_t> -> IO (Ptr <alpm_list_t>)
+
+#ccall alpm_trans_get_flags , Ptr <alpm_handle_t> -> IO <alpm_transflag_t>
+
+#ccall alpm_trans_get_add , Ptr <alpm_handle_t> -> IO (Ptr <alpm_list_t>)
+
+#ccall alpm_trans_get_remove , Ptr <alpm_handle_t> -> IO (Ptr <alpm_list_t>)
+
+#ccall alpm_trans_init , Ptr <alpm_handle_t> -> <alpm_transflag_t> -> IO CInt
+
+#ccall alpm_trans_prepare , Ptr <alpm_handle_t> -> Ptr (Ptr <alpm_list_t>) -> IO CInt
+
+#ccall alpm_trans_commit , Ptr <alpm_handle_t> -> Ptr (Ptr <alpm_list_t>) -> IO CInt
+
+#ccall alpm_trans_interrupt , Ptr <alpm_handle_t> -> IO CInt
+
+#ccall alpm_trans_release , Ptr <alpm_handle_t> -> IO CInt
+
+
+#ccall alpm_sync_sysupgrade , Ptr <alpm_handle_t> -> CInt -> IO CInt
+
+#ccall alpm_add_pkg , Ptr <alpm_handle_t> -> Ptr <alpm_pkg_t> -> IO CInt
+
+#ccall alpm_remove_pkg , Ptr <alpm_handle_t> -> Ptr <alpm_pkg_t> -> IO CInt
+
+
+#ccall alpm_checkdeps , Ptr <alpm_handle_t> -> Ptr <alpm_list_t> -> Ptr <alpm_list_t> -> Ptr <alpm_list_t> -> CInt -> IO (Ptr <alpm_list_t>)
+
+#ccall alpm_find_satisfier , Ptr <alpm_list_t> -> CString -> IO (Ptr <alpm_pkg_t>)
+
+#ccall alpm_find_dbs_satisfier , Ptr <alpm_handle_t> -> Ptr <alpm_list_t> -> CString -> IO (Ptr <alpm_pkg_t>)
+
+#ccall alpm_checkconflicts , Ptr <alpm_handle_t> -> Ptr <alpm_list_t> -> IO (Ptr <alpm_list_t>)
+
+#ccall alpm_dep_compute_string , Ptr <alpm_depend_t> -> IO CString
+
+
+#ccall alpm_compute_md5sum , CString -> IO CString
+
+#ccall alpm_compute_sha256sum , CString -> IO CString
+
+
+#ccall alpm_errno , Ptr <alpm_handle_t> -> IO <_alpm_errno_t>
+
+#ccall alpm_strerror , <_alpm_errno_t> -> IO CString
+
+
+#ccall alpm_initialize , CString -> CString -> Ptr <_alpm_errno_t> -> IO (Ptr <alpm_handle_t>)
+
+#ccall alpm_release , Ptr <alpm_handle_t> -> IO CInt
+
+
+#ccall alpm_version , IO CString
+
+#ccall alpm_capabilities , IO <alpm_caps>
 
 
