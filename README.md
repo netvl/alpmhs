@@ -3,7 +3,7 @@ ArchLinux Package Management library wrapper and its frontend
 
 This is Haskell wrapper for [libalpm](http://www.archlinux.org/pacman/), a library for package management for Linux systems.
 
-It provides low-level bindings to C functions, as well as high-level monadic interface.
+It provides high-level monadic interface, as well as low-level bindings to C functions.
 
 High-level interface has its frontend program called `halp`. This is `pacman` wrapper written in Haskell, supporting (supposedly) also AUR and Hackage automatic package management.
 
