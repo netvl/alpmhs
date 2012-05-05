@@ -4,6 +4,7 @@ import Control.Applicative
 import Control.Monad
 import Foreign
 import Foreign.C.String
+import Foreign.C.Types
 
 import Distribution.ArchLinux.Libalpm.Raw
 
@@ -20,28 +21,22 @@ traverse f v (AlpmList fptr) = withForeignPtr fptr (follow v)
         nv <- f v $ castPtr datum
         follow nv next
 
-class AlpmListConvertible a b where
-  convert :: a -> IO (Ptr b)
+class AlpmListApplicable a b | a -> b, b -> a where
+  toPtr :: a -> IO (Ptr b)
+  fromPtr :: Ptr b -> IO a
   
-  fromList :: [a] -> IO (AlpmList b)
-  fromList xs = AlpmList <$> newForeignPtr p'alpm_list_free_full <*> nptr
+  fromList :: [a] -> IO (AlpmList (Ptr b))
+  fromList xs = AlpmList <$> (newForeignPtr p'alpm_list_free_full =<< nptr)
     where
       nptr = foldM reductor nullPtr xs
-      reductor :: Ptr b -> a -> IO (Ptr b)
-      reductor ptr x = convert x >>= c'alpm_list_add ptr . castPtr
+      reductor ptr x = (toPtr x :: IO (Ptr b)) >>= c'alpm_list_add ptr . castPtr
 
-  toList :: AlpmList b -> IO [a]
-
-instance AlpmListConvertible String CString where
-  fromList [] = newForeignPtr_ nullPtr >>= return . AlpmList
-  fromList ss = go nullPtr ss
+  toList :: AlpmList (Ptr b) -> IO [a]
+  toList = traverse reductor []
     where
-      go list [] = AlpmList <$> newForeignPtr p'alpm_list_free_full list 
-      go list (x:xs) = do
-        cx <- newCString x
-        nlist <- c'alpm_list_add list (castPtr cx)
-        go nlist xs
+        reductor :: [a] -> Ptr b -> IO [a]
+        reductor xs ptr = fromPtr ptr >>= return . (:xs)
 
-  toList = traverse reductor [] 
-    where
-      reductor xs ptr = peek ptr >>= peekCString >>= return . (:xs)
+instance AlpmListApplicable String CChar where
+  toPtr = newCString
+  fromPtr = peekCString
