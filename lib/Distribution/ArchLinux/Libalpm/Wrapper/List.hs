@@ -1,6 +1,7 @@
 module Distribution.ArchLinux.Libalpm.Wrapper.List where
 
 import Control.Applicative
+import Control.Monad
 import Foreign
 import Foreign.C.String
 
@@ -19,11 +20,19 @@ traverse f v (AlpmList fptr) = withForeignPtr fptr (follow v)
         nv <- f v $ castPtr datum
         follow nv next
 
-class AlpmListConvertible a where
-  fromList :: [a] -> IO (AlpmList a)
-  toList :: AlpmList a -> IO [a]
+class AlpmListConvertible a b where
+  convert :: a -> IO (Ptr b)
+  
+  fromList :: [a] -> IO (AlpmList b)
+  fromList xs = AlpmList <$> newForeignPtr p'alpm_list_free_full <*> nptr
+    where
+      nptr = foldM reductor nullPtr xs
+      reductor :: Ptr b -> a -> IO (Ptr b)
+      reductor ptr x = convert x >>= c'alpm_list_add ptr . castPtr
 
-instance AlpmListConvertible String where
+  toList :: AlpmList b -> IO [a]
+
+instance AlpmListConvertible String CString where
   fromList [] = newForeignPtr_ nullPtr >>= return . AlpmList
   fromList ss = go nullPtr ss
     where
