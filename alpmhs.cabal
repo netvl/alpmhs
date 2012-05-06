@@ -41,3 +41,10 @@ Executable halp
     Build-Depends:     base >= 4.5, alpmhs
     Hs-Source-Dirs:    bin
     Main-Is:           Main.hs
+
+Test-Suite library-tests
+    Type:              exitcode-stdio-1.0
+    Build-Depends:     base >= 4.5, QuickCheck >= 2.4.2, alpmhs == 0.1.0.0
+    Hs-Source-Dirs:    lib/test
+    Main-Is:           Main.hs
+
