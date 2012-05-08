@@ -35,8 +35,7 @@ Library
                      , Distribution.ArchLinux.Libalpm.Wrapper.Types
     Extensions:        ForeignFunctionInterface, FlexibleInstances,
                        TypeSynonymInstances, MultiParamTypeClasses,
-                       ScopedTypeVariables, FunctionalDependencies,
-                       TypeFamilies
+                       ScopedTypeVariables, FunctionalDependencies
 
 Executable halp
     Build-Depends:     base >= 4.5, alpmhs
