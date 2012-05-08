@@ -37,10 +37,13 @@ class AlpmListApplicable a b | a -> b, b -> a where
   toPtr :: a -> IO (Ptr b)
   -- | Converts a pointer to its value
   fromPtr :: Ptr b -> IO a
+
+  -- | Pointer to finalizer function
+  finalizer :: a -> FunPtr (Ptr C'alpm_list_t -> IO ())
   
   -- | Converts a list of values to 'AlpmList'
   fromList :: [a] -> IO (AlpmList a)
-  fromList xs = AlpmList <$> (newForeignPtr p'alpm_list_free_full =<< nptr)
+  fromList xs = AlpmList <$> (newForeignPtr (finalizer (undefined :: a)) =<< nptr)
     where
       nptr = foldM reductor nullPtr (reverse xs)
       reductor ptr x = (toPtr x :: IO (Ptr b)) >>= c'alpm_list_add ptr . castPtr
@@ -55,3 +58,4 @@ class AlpmListApplicable a b | a -> b, b -> a where
 instance AlpmListApplicable String CChar where
   toPtr = newCString
   fromPtr = peekCString
+  finalizer = const p'alpm_list_free_full
