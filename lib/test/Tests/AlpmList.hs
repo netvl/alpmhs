@@ -5,6 +5,7 @@ import Control.Concurrent
 import Control.Monad
 import Data.List
 import System.IO
+import System.Mem
 
 import Test.QuickCheck
 import Test.QuickCheck.Monadic
@@ -20,23 +21,33 @@ instance Arbitrary StringWithNoNulls where
 
 runAlpmListTests :: IO ()
 runAlpmListTests = do
-  --putStrLn "Test with not null chars"
-  --quickCheck $ forAll (arbitrary :: Gen [StringWithNoNulls]) $ 
-  --  prop_fromList_toList_strings . map getString
-  putStrLn "Performing memory test"
-  memoryTest
+  putStrLn "Test with not null chars"
+  quickCheck $ forAll (arbitrary :: Gen [StringWithNoNulls]) $ 
+    prop_fromList_toList_strings . map getString
+  --putStrLn "Performing memory test"
+  --memoryTest
 
 arbStrList :: IO [String]
 arbStrList = map getString <$> take 10 <$> sample' (arbitrary :: Gen StringWithNoNulls)
 
+simpleStrList :: IO [String]
+simpleStrList = return $ replicate 10 ['0'..'9']
+
+wait = do
+  putStr "Press enter" >> hFlush stdout
+  _ <- getLine  
+  return ()
+
 memoryTest :: IO ()
 memoryTest = do
-  lst <- concat <$> (replicateM 100000 $ arbStrList)
+  lst <- concat <$> (replicateM 100000 $ simpleStrList)
   alpmList <- withAlpmList lst Full toList
+  wait
+  
   putStrLn $ show $ alpmList == lst
-  putStr "Press enter" >> hFlush stdout
-  _ <- getLine
-  putStrLn $ show $ alpmList == lst
+  performGC
+
+  wait
   return ()
 
 prop_fromList_toList_strings :: [String] -> Property

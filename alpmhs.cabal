@@ -17,7 +17,7 @@ Extra-Source-Files:  README.md
 
 
 Library
-    Build-Depends:     base >= 4.5, bindings-DSL -any
+    Build-Depends:     base >= 4.5, bindings-DSL -any, mtl -any, transformers -any
     Extra-Libraries:   alpm
     Hs-Source-Dirs:    lib
     C-Sources:         lib/helper.c
@@ -35,7 +35,8 @@ Library
                      , Distribution.ArchLinux.Libalpm.Wrapper.Types
     Extensions:        ForeignFunctionInterface, FlexibleInstances,
                        TypeSynonymInstances, MultiParamTypeClasses,
-                       ScopedTypeVariables, FunctionalDependencies
+                       ScopedTypeVariables, FunctionalDependencies,
+                       GeneralizedNewtypeDeriving
     GHC-Options:       -O2
 
 Executable halp

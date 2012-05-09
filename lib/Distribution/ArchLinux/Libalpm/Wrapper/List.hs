@@ -87,11 +87,9 @@ walk f ptr = when (ptr /= nullPtr) $ do
   walk f next
 
 freeListFull :: AlpmList a -> IO ()
-freeListFull (AlpmList ptr) = putStrLn "freeListFull called" >> walk freeCellData ptr >> c'alpm_list_free ptr
+freeListFull (AlpmList ptr) = walk freeCellData ptr >> c'alpm_list_free ptr
   where
-    freeCellData cptr = do
-      dataPtr <- c'alpm_list_t'data <$> peek cptr
-      free dataPtr
+    freeCellData cptr = c'alpm_list_t'data <$> peek cptr >>= free
 
 freeListSimple :: AlpmList a -> IO ()
-freeListSimple (AlpmList ptr) = putStrLn "freeListSimple called" >> c'alpm_list_free ptr
+freeListSimple (AlpmList ptr) = c'alpm_list_free ptr
