@@ -6,11 +6,12 @@ import Control.Monad.IO.Class
 import Control.Monad.RWS
 
 import Foreign
+import Foreign.C.String
 
-import Distribution.ArchLinux.Libalpm.Raw.Types
+import Distribution.ArchLinux.Libalpm.Raw
 import Distribution.ArchLinux.Libalpm.Wrapper.List
 
-data AlpmConfig = AlpmConfig
+data AlpmConfig = AlpmConfig { root :: String, dbPath :: String }
 
 data AlpmError = ErrorCode { message :: String, code :: Int }
 
@@ -18,9 +19,14 @@ instance Error AlpmError where
   noMsg = ErrorCode { message = "", code = 0 }
   strMsg s = ErrorCode { message = s, code = 0 }
 
+fromAlpmErrno :: C'_alpm_errno_t -> AlpmError
+fromAlpmErrno errcode = unsafeLocalState $ do
+  str <- peekCString =<< c'alpm_strerror errcode
+  return $ ErrorCode str (fromIntegral errcode)
+
 data AlpmLogEntry = AlpmLogEntry String
 
-data AlpmEnv = AlpmEnv { config :: AlpmConfig }
+data AlpmEnv = AlpmEnv { handle :: AlpmHandle, config :: AlpmConfig }
 
 data AlpmLog = AlpmLog { entries :: [AlpmLogEntry] }
 
@@ -32,10 +38,31 @@ data AlpmState = AlpmState
 
 -- | Main ALPM execution monad, encapsulates all state needed to run ALPM transactions and
 -- to perform other actions.
-newtype Alpm a = Alpm { unAlpm :: RWST AlpmEnv AlpmLog AlpmState (ErrorT AlpmError IO) a }
+newtype Alpm a = Alpm { unAlpm :: ErrorT AlpmError (RWST AlpmEnv AlpmLog AlpmState IO) a }
                deriving (Applicative, Functor, Monad, MonadError AlpmError, MonadState AlpmState, 
                          MonadReader AlpmEnv, MonadWriter AlpmLog, MonadIO,
                          MonadRWS AlpmEnv AlpmLog AlpmState)
+
+withinAlpmSession :: AlpmConfig -> Alpm a -> IO ((Either AlpmError a), AlpmLog)
+withinAlpmSession conf@(AlpmConfig { .. }) (Alpm a) = do
+  envResult <- initEnv
+  case envResult of
+    Left err -> return (Left err, mempty)
+    Right env -> do
+      state <- initState
+      evalRWST (runErrorT a) env state
+  where
+    initState = return AlpmState
+    initEnv = 
+      withCString root $ \rootPtr ->
+      withCString dbPath $ \dbPathPtr ->
+      alloca $ \errBuf -> do
+        handlePtr <- c'alpm_initialize rootPtr dbPathPtr errBuf
+        err <- peek errBuf
+        if err > 0
+          then return $ Left $ fromAlpmErrno err
+          else Right <$> (\ptr -> AlpmEnv { config = conf, handle = AlpmHandle ptr}) 
+                     <$> newForeignPtr p'alpm_handle_finalizer handlePtr
 
 newtype AlpmHandle = AlpmHandle (ForeignPtr C'alpm_handle_t)
 newtype AlpmDB = AlpmDB (ForeignPtr C'alpm_db_t)

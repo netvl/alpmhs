@@ -39,6 +39,8 @@ import Distribution.ArchLinux.Libalpm.Raw.Types
 
 #ccall alpm_release , Ptr <alpm_handle_t> -> IO CInt
 
+#ccall alpm_handle_finalizer , Ptr <alpm_handle_t> -> IO ()
+
 
 #ccall alpm_version , IO CString
 
