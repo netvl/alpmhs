@@ -3,7 +3,7 @@ Name:                alpmhs
 --                   | | +----- non-breaking API additions
 --                   | | | +--- code changes with no API change
 Version:             0.1.0.0
-Synopsis:            ArchLinux Package Management library wrapper and its frontend
+Synopsis:            ArchLinux Package Management library wrapper and its frontend.
 Homepage:            https://github.com/dpx-infinity/alpmhs
 Bug-Reports:         https://github.com/dpx-infinity/alpmhs/issues
 License:             BSD3
@@ -32,6 +32,7 @@ Library
                      , Distribution.ArchLinux.Libalpm.Raw.List
                      , Distribution.ArchLinux.Libalpm.Wrapper
                      , Distribution.ArchLinux.Libalpm.Wrapper.List
+                     , Distribution.ArchLinux.Libalpm.Wrapper.Alpm
                      , Distribution.ArchLinux.Libalpm.Wrapper.Types
                      , Distribution.ArchLinux.Libalpm.Wrapper.Util
     Extensions:        ForeignFunctionInterface, FlexibleInstances,

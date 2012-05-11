@@ -1,4 +1,13 @@
-module Distribution.ArchLinux.Libalpm.Wrapper.Types where
+module Distribution.ArchLinux.Libalpm.Wrapper.Types (
+  AlpmConfig(..),
+  AlpmError(..),
+  AlpmLogEntry(..),
+  AlpmEnv(..),
+  AlpmLog(..),
+  AlpmState(..),
+  AlpmHandle(..),
+  openHandle
+) where
 
 import Control.Applicative
 import Control.Monad.Error
@@ -38,12 +47,10 @@ instance Monoid AlpmLog where
 
 data AlpmState = AlpmState
 
--- | Main ALPM execution monad, encapsulates all state needed to run ALPM transactions and
--- to perform other actions.
-newtype Alpm a = Alpm { unAlpm :: ErrorT AlpmError (RWST AlpmEnv AlpmLog AlpmState IO) a }
-               deriving (Applicative, Functor, Monad, MonadError AlpmError, MonadState AlpmState, 
-                         MonadReader AlpmEnv, MonadWriter AlpmLog, MonadIO,
-                         MonadRWS AlpmEnv AlpmLog AlpmState)
+newtype AlpmHandle = AlpmHandle (ForeignPtr C'alpm_handle_t)
+newtype AlpmDB = AlpmDB (ForeignPtr C'alpm_db_t)
+newtype AlpmPkg = AlpmPkg (ForeignPtr C'alpm_pkg_t)
+newtype AlpmTrans = AlpmTrans (ForeignPtr C'alpm_trans_t)
 
 openHandle :: String -> String -> IO (Either AlpmError AlpmHandle)
 openHandle root dbPath = alloca $ \errBuf ->
@@ -53,24 +60,6 @@ openHandle root dbPath = alloca $ \errBuf ->
     if err > 0
       then return $ Left $ fromAlpmErrno err
       else Right <$> AlpmHandle <$> newForeignPtr p'alpm_handle_finalizer handlePtr
-
-withinAlpmSession :: AlpmConfig -> Alpm a -> IO ((Either AlpmError a), AlpmLog)
-withinAlpmSession conf@(AlpmConfig { root, dbPath }) (Alpm act) = do
-  ehandle <- openHandle root dbPath
-  case ehandle of
-    Left err -> return (Left err, mempty)
-    Right handle -> do
-      env <- initEnv handle
-      state <- initState
-      evalRWST (runErrorT act) env state
-  where
-    initState = return AlpmState
-    initEnv handle = return AlpmEnv { config = conf, handle = handle }
-
-newtype AlpmHandle = AlpmHandle (ForeignPtr C'alpm_handle_t)
-newtype AlpmDB = AlpmDB (ForeignPtr C'alpm_db_t)
-newtype AlpmPkg = AlpmPkg (ForeignPtr C'alpm_pkg_t)
-newtype AlpmTrans = AlpmTrans (ForeignPtr C'alpm_trans_t)
 
 newtype AlpmDepend = AlpmDepend (Ptr C'alpm_depend_t)
 newtype AlpmDepmissing = AlpmDepmissing (Ptr C'alpm_depmissing_t)
