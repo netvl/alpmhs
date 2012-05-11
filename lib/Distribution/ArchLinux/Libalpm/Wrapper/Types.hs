@@ -22,29 +22,43 @@ import Distribution.ArchLinux.Libalpm.Raw
 import Distribution.ArchLinux.Libalpm.Wrapper.List
 import Distribution.ArchLinux.Libalpm.Wrapper.Util
 
-data AlpmConfig = AlpmConfig { root :: String, dbPath :: String }
+-- | A configuration value used for ALPM library configuration.
+data AlpmConfig = AlpmConfig { 
+    root   :: String,  -- ^ Path to root directory to be used by ALPM ("/" for Archlinux systems)
+    dbPath :: String   -- ^ Path to directory with sync database ("/var/lib/pacman" for Archlinux)
+}
 
-data AlpmError = ErrorCode { message :: String, code :: Int }
+-- | An error value returned by ALPM functions.
+data AlpmError = ErrorCode { 
+    message :: String,  -- ^ Error message
+    code :: Int         -- ^ Error code
+  }
 
 instance Error AlpmError where
   noMsg = ErrorCode { message = "", code = 0 }
   strMsg s = ErrorCode { message = s, code = 0 }
 
-fromAlpmErrno :: C'_alpm_errno_t -> AlpmError
+-- | Converts ALPM error code to its user-readable representation.
+fromAlpmErrno :: C'_alpm_errno_t  -- ^ Error code
+              -> AlpmError
 fromAlpmErrno errcode = unsafeLocalState $ do
   str <- peekCString =<< c'alpm_strerror errcode
   return $ ErrorCode str (fromIntegral errcode)
 
+-- | Single log entry.
 data AlpmLogEntry = AlpmLogEntry String
 
+-- | An environment for ALPM actions. Contains read-only data needed for ALPM to operate.
 data AlpmEnv = AlpmEnv { handle :: AlpmHandle, config :: AlpmConfig }
 
+-- | Contains log of ALPM operations.
 data AlpmLog = AlpmLog { entries :: [AlpmLogEntry] }
 
 instance Monoid AlpmLog where
   (AlpmLog entries1) `mappend` (AlpmLog entries2) = AlpmLog $ entries1 ++ entries2
   mempty = AlpmLog []
 
+-- | Dynamic state of ALPM operations, not sure if needed.
 data AlpmState = AlpmState
 
 newtype AlpmHandle = AlpmHandle (ForeignPtr C'alpm_handle_t)
