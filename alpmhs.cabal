@@ -33,10 +33,12 @@ Library
                      , Distribution.ArchLinux.Libalpm.Wrapper
                      , Distribution.ArchLinux.Libalpm.Wrapper.List
                      , Distribution.ArchLinux.Libalpm.Wrapper.Types
+                     , Distribution.ArchLinux.Libalpm.Wrapper.Util
     Extensions:        ForeignFunctionInterface, FlexibleInstances,
                        TypeSynonymInstances, MultiParamTypeClasses,
                        ScopedTypeVariables, FunctionalDependencies,
-                       GeneralizedNewtypeDeriving, RecordWildCards
+                       GeneralizedNewtypeDeriving, RecordWildCards,
+                       NamedFieldPuns
     GHC-Options:       -O2
 
 Executable halp

@@ -5,11 +5,13 @@ import Control.Monad.Error
 import Control.Monad.IO.Class
 import Control.Monad.RWS
 
-import Foreign
+import Foreign hiding (unsafeLocalState)
 import Foreign.C.String
+import Foreign.Marshal.Unsafe (unsafeLocalState)
 
 import Distribution.ArchLinux.Libalpm.Raw
 import Distribution.ArchLinux.Libalpm.Wrapper.List
+import Distribution.ArchLinux.Libalpm.Wrapper.Util
 
 data AlpmConfig = AlpmConfig { root :: String, dbPath :: String }
 
@@ -43,26 +45,27 @@ newtype Alpm a = Alpm { unAlpm :: ErrorT AlpmError (RWST AlpmEnv AlpmLog AlpmSta
                          MonadReader AlpmEnv, MonadWriter AlpmLog, MonadIO,
                          MonadRWS AlpmEnv AlpmLog AlpmState)
 
+openHandle :: String -> String -> IO (Either AlpmError AlpmHandle)
+openHandle root dbPath = alloca $ \errBuf ->
+  withCStrings [root, dbPath] $ \[rootPtr, dbPathPtr] -> do
+    handlePtr <- c'alpm_initialize rootPtr dbPathPtr errBuf
+    err <- peek errBuf
+    if err > 0
+      then return $ Left $ fromAlpmErrno err
+      else Right <$> AlpmHandle <$> newForeignPtr p'alpm_handle_finalizer handlePtr
+
 withinAlpmSession :: AlpmConfig -> Alpm a -> IO ((Either AlpmError a), AlpmLog)
-withinAlpmSession conf@(AlpmConfig { .. }) (Alpm a) = do
-  envResult <- initEnv
-  case envResult of
+withinAlpmSession conf@(AlpmConfig { root, dbPath }) (Alpm act) = do
+  ehandle <- openHandle root dbPath
+  case ehandle of
     Left err -> return (Left err, mempty)
-    Right env -> do
+    Right handle -> do
+      env <- initEnv handle
       state <- initState
-      evalRWST (runErrorT a) env state
+      evalRWST (runErrorT act) env state
   where
     initState = return AlpmState
-    initEnv = 
-      withCString root $ \rootPtr ->
-      withCString dbPath $ \dbPathPtr ->
-      alloca $ \errBuf -> do
-        handlePtr <- c'alpm_initialize rootPtr dbPathPtr errBuf
-        err <- peek errBuf
-        if err > 0
-          then return $ Left $ fromAlpmErrno err
-          else Right <$> (\ptr -> AlpmEnv { config = conf, handle = AlpmHandle ptr}) 
-                     <$> newForeignPtr p'alpm_handle_finalizer handlePtr
+    initEnv handle = return AlpmEnv { config = conf, handle = handle }
 
 newtype AlpmHandle = AlpmHandle (ForeignPtr C'alpm_handle_t)
 newtype AlpmDB = AlpmDB (ForeignPtr C'alpm_db_t)
