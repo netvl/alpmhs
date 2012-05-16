@@ -35,6 +35,8 @@ Library
                      , Distribution.ArchLinux.Libalpm.Wrapper.Alpm
                      , Distribution.ArchLinux.Libalpm.Wrapper.Types
                      , Distribution.ArchLinux.Libalpm.Wrapper.Util
+                     , Distribution.ArchLinux.Libalpm.Wrapper.Options
+                     , Distribution.ArchLinux.Libalpm.Wrapper.Callbacks
     Extensions:        ForeignFunctionInterface, FlexibleInstances,
                        TypeSynonymInstances, MultiParamTypeClasses,
                        ScopedTypeVariables, FunctionalDependencies,

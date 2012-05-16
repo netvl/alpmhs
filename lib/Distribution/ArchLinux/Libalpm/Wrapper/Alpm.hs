@@ -37,6 +37,6 @@ withinAlpmSession conf@(AlpmConfig { root, dbPath }) (Alpm act) = do
       state <- initState
       evalRWST (runErrorT act) env state
   where
-    initState = return AlpmState
+    initState      = return AlpmState
     initEnv handle = return AlpmEnv { config = conf, handle = handle }
 

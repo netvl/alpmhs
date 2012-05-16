@@ -6,6 +6,7 @@ module Distribution.ArchLinux.Libalpm.Wrapper.Types (
   AlpmLog(..),
   AlpmState(..),
   AlpmHandle(..),
+  AlpmPkg(..),
   openHandle
 ) where
 
@@ -23,19 +24,19 @@ import Distribution.ArchLinux.Libalpm.Wrapper.List
 import Distribution.ArchLinux.Libalpm.Wrapper.Util
 
 -- | A configuration value used for ALPM library configuration.
-data AlpmConfig = AlpmConfig { 
-    root   :: String,  -- ^ Path to root directory to be used by ALPM ("/" for Archlinux systems)
-    dbPath :: String   -- ^ Path to directory with sync database ("/var/lib/pacman" for Archlinux)
+data AlpmConfig = AlpmConfig {
+    root   :: String,   -- ^ Path to root directory to be used by ALPM ("/" for Archlinux systems)
+    dbPath :: String    -- ^ Path to directory with sync database ("/var/lib/pacman" for Archlinux)
 }
 
 -- | An error value returned by ALPM functions.
-data AlpmError = ErrorCode { 
+data AlpmError = ErrorCode {
     message :: String,  -- ^ Error message
-    code :: Int         -- ^ Error code
-  }
+    code    :: Int      -- ^ Error code
+}
 
 instance Error AlpmError where
-  noMsg = ErrorCode { message = "", code = 0 }
+  noMsg    = ErrorCode { message = "", code = 0 }
   strMsg s = ErrorCode { message = s, code = 0 }
 
 -- | Converts ALPM error code to its user-readable representation.
@@ -63,7 +64,7 @@ data AlpmState = AlpmState
 
 newtype AlpmHandle = AlpmHandle (ForeignPtr C'alpm_handle_t)
 newtype AlpmDB = AlpmDB (ForeignPtr C'alpm_db_t)
-newtype AlpmPkg = AlpmPkg (ForeignPtr C'alpm_pkg_t)
+newtype AlpmPkg = AlpmPkg (Ptr C'alpm_pkg_t)
 newtype AlpmTrans = AlpmTrans (ForeignPtr C'alpm_trans_t)
 
 openHandle :: String -> String -> IO (Either AlpmError AlpmHandle)
@@ -87,4 +88,3 @@ newtype AlpmBackup = AlpmBackup (Ptr C'alpm_backup_t)
 newtype AlpmPgpkey = AlpmPgpkey (Ptr C'alpm_pgpkey_t)
 newtype AlpmSigresult = AlpmSigresult (Ptr C'alpm_sigresult_t)
 newtype AlpmSiglist = AlpmSiglist (Ptr C'alpm_siglist_t)
-
