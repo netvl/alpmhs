@@ -1,105 +1,107 @@
-module Distribution.ArchLinux.Libalpm.Wrapper.Callbacks (
-  AlpmEventHandlers(..),
-  AlpmEventCallback(..),
-  (=:), (=*), handlers, setHandlers
-) where
+{-# LANGUAGE TemplateHaskell #-}
+module Distribution.ArchLinux.Libalpm.Wrapper.Callbacks where
 
 import Foreign
 import Foreign.C.String
 
 import Distribution.ArchLinux.Libalpm.Raw.Types
 import Distribution.ArchLinux.Libalpm.Wrapper.Types
+import Distribution.ArchLinux.Libalpm.Wrapper.TH
+
 
 -- | Contains event handlers to be called when corresponding event is emitted
 -- from inside of Libalpm. 'Nothing' means that the event will be ignored, 'Just' value
 -- sets the handler.
 data AlpmEventHandlers = AlpmEventHandlers {
     -- | Dependency checks started.
-    eventCheckdepsStart      :: Maybe (IO ())
+    _eventCheckdepsStart      :: Maybe (IO ())
     -- | Dependency checks finished.
-  , eventCheckdepsDone       :: Maybe (IO ())
+  , _eventCheckdepsDone       :: Maybe (IO ())
     -- | File conflicts checks started.
-  , eventFileconflictsStart  :: Maybe (IO ())
+  , _eventFileconflictsStart  :: Maybe (IO ())
     -- | File conflicts checks finished.
-  , eventFileconflictsDone   :: Maybe (IO ())
+  , _eventFileconflictsDone   :: Maybe (IO ())
     -- | Dependency resolving started.
-  , eventResolvedepsStart    :: Maybe (IO ())
+  , _eventResolvedepsStart    :: Maybe (IO ())
     -- | Dependency resolving finished.
-  , eventResolvedepsDone     :: Maybe (IO ())
+  , _eventResolvedepsDone     :: Maybe (IO ())
     -- | Internal conflicts checks started.
-  , eventInterconflictsStart :: Maybe (IO ())
+  , _eventInterconflictsStart :: Maybe (IO ())
     -- | Internal conflicts checks finished.
-  , eventInterconflictsEnd   :: Maybe (IO ())
+  , _eventInterconflictsEnd   :: Maybe (IO ())
     -- | Package add procedure started. 'AlpmPkg' argument means the package
     -- being processed.
-  , eventAddStart            :: Maybe (AlpmPkg -> IO ())
+  , _eventAddStart            :: Maybe (AlpmPkg -> IO ())
     -- | Package add procedure finished. 'AlpmPkg' argument means the package
     -- that just has been added. Note: in fact Libalpm emits this event with two
     -- 'AlpmPkg' arguments, but it seems that second argument is always null so
     -- it does not represented here.
-  , eventAddDone             :: Maybe (AlpmPkg -> IO ())
+  , _eventAddDone             :: Maybe (AlpmPkg -> IO ())
     -- | Package removal procedure started. 'AlpmPkg' argument means the package
     -- being removed.
-  , eventRemoveStart         :: Maybe (AlpmPkg -> IO ())
+  , _eventRemoveStart         :: Maybe (AlpmPkg -> IO ())
     -- | Package removal procedure finished. 'AlpmPkg' argument means the package
     -- that just has been removed.
-  , eventRemoveDone          :: Maybe (AlpmPkg -> IO ())
+  , _eventRemoveDone          :: Maybe (AlpmPkg -> IO ())
     -- | Package upgrade procedure started. First 'AlpmPkg' argument means new
     -- package that will be installed; second 'AlpmPkg' argument means old package
     -- that will be replaced.
-  , eventUpgradeStart        :: Maybe (AlpmPkg -> AlpmPkg -> IO ())
+  , _eventUpgradeStart        :: Maybe (AlpmPkg -> AlpmPkg -> IO ())
     -- | Package upgrade procedure finished. First 'AlpmPkg' argument means new
     -- package that just has been installed; second 'AlpmPkg' argument means old
     -- package that just has been replaced.
-  , eventUpgradeDone         :: Maybe (AlpmPkg -> AlpmPkg -> IO ())
+  , _eventUpgradeDone         :: Maybe (AlpmPkg -> AlpmPkg -> IO ())
     -- | Integrity checks started.
-  , eventIntegrityStart      :: Maybe (IO ())
+  , _eventIntegrityStart      :: Maybe (IO ())
     -- | Integrity checks finished.
-  , eventIntegrityDone       :: Maybe (IO ())
+  , _eventIntegrityDone       :: Maybe (IO ())
     -- | Package loading started.
-  , eventLoadStart           :: Maybe (IO ())
+  , _eventLoadStart           :: Maybe (IO ())
     -- | Package loading finished.
-  , eventLoadDone            :: Maybe (IO ())
+  , _eventLoadDone            :: Maybe (IO ())
     -- | Delta integrity checks started.
-  , eventDeltaIntegrityStart :: Maybe (IO ())
+  , _eventDeltaIntegrityStart :: Maybe (IO ())
     -- | Delta integrity checks finished.
-  , eventDeltaIntegrityDone  :: Maybe (IO ())
+  , _eventDeltaIntegrityDone  :: Maybe (IO ())
     -- | Delta patches application started.
-  , eventDeltaPatchesStart   :: Maybe (IO ())
+  , _eventDeltaPatchesStart   :: Maybe (IO ())
     -- | Delta patches application finished.
-  , eventDeltaPatchesDone    :: Maybe (IO ())
-    -- | Single delta patch application started. First 'String' argument is a 
+  , _eventDeltaPatchesDone    :: Maybe (IO ())
+    -- | Single delta patch application started. First 'String' argument is a
     -- patch destination version; second 'String' argument is delta name (???).
-  , eventDeltaPatchStart     :: Maybe (String -> String -> IO ())
+  , _eventDeltaPatchStart     :: Maybe (String -> String -> IO ())
     -- | Single delta patch application finished successfully.
-  , eventDeltaPatchDone      :: Maybe (IO ())
+  , _eventDeltaPatchDone      :: Maybe (IO ())
     -- | Single delta patch application failed.
-  , eventDeltaPatchFailed    :: Maybe (IO ())
+  , _eventDeltaPatchFailed    :: Maybe (IO ())
 }
+
+generateUpdaters ''AlpmEventHandlers
+generateEmptyRecord "emptyEventHandlers" ''AlpmEventHandlers 'AlpmEventHandlers
 
 -- | Assigns a handler to the specific event. To be used in conjunction with 'handlers'
 -- and 'setHandlers'.
-(=:) :: (a -> Maybe b -> a)     -- ^ Event identifier
+(=:) :: (Maybe b -> a -> a)     -- ^ Event identifier
      -> b                       -- ^ Handler itself
      -> [a -> a]                -- ^ A singleton list with updater function
-(=:) c v = [\s -> c s (Just v)]
+(=:) c v = [c (Just v)]
 
 -- | Assigns a handler to a number of events simultaneously. To be used in conjunction with
 -- 'handlers' and 'setHandlers'.
-(=*) :: [a -> Maybe b -> a]     -- ^ A number of event identifiers
+(=*) :: [Maybe b -> a -> a]     -- ^ A number of event identifiers
      -> b                       -- ^ Handler itself
      -> [a -> a]                -- ^ A list with updater functions
 (=*) cs v = foldr (\c rs -> (c =: v) ++ rs) [] cs
 
 -- | Disables a handler for the specific event. To be used in conjunction with 'handlers'
 -- and 'setHandlers'.
-disable :: (a -> Maybe b -> a)  -- ^ Event identifier
+disable :: (Maybe b -> a -> a)  -- ^ Event identifier
         -> [a -> a]             -- ^ A singleton list with updater function
-disable c = [\s -> c s Nothing]
+disable c = [c Nothing]
 
 -- | Disables handlers for a number of event simultaneously. To be used in conjunction with
 -- 'handlers' and 'setHandlers'.
-disableAll :: [a -> Maybe b -> a]  -- ^ A number of event identifiers
+disableAll :: [Maybe b -> a -> a]  -- ^ A number of event identifiers
            -> [a -> a]             -- ^ A list with updater functions
 disableAll = foldr (\c rs -> disable c ++ rs) []
 
@@ -113,25 +115,25 @@ setHandlers :: [a -> a]   -- ^ A list of updater functions
             -> a          -- ^ An aggregation structure with handler places updated
 setHandlers = foldr (.) id
 
--- handlers $ [ eventCheckdepsStart =: return (), [ eventCheckdepsDone, eventAddStart] =* return () ]
-
-class AlpmEventCallback a b | a -> b where
+-- | Represents callback function type which can be converted from high-level type to underlying
+-- low-level C type.
+class AlpmCallback a b | a -> b where
   wrap :: a -> b
 
-instance AlpmEventCallback (IO ()) (IO ()) where
+instance AlpmCallback (IO ()) (IO ()) where
   wrap = id
 
-instance AlpmEventCallback (AlpmPkg -> IO ()) (Ptr C'alpm_pkg_t -> IO ()) where
+instance AlpmCallback (AlpmPkg -> IO ()) (Ptr C'alpm_pkg_t -> IO ()) where
   wrap f = f . AlpmPkg
 
-instance AlpmEventCallback (AlpmPkg -> AlpmPkg -> IO ())
+instance AlpmCallback (AlpmPkg -> AlpmPkg -> IO ())
                            (Ptr C'alpm_pkg_t -> Ptr C'alpm_pkg_t -> IO ()) where
   wrap f = \p1 p2 -> f (AlpmPkg p1) (AlpmPkg p2)
 
-instance AlpmEventCallback (String -> IO ()) (CString -> IO ()) where
+instance AlpmCallback (String -> IO ()) (CString -> IO ()) where
   wrap f = \cstr -> peekCString cstr >>= f
 
-instance AlpmEventCallback (String -> String -> IO ()) (CString -> CString -> IO ()) where
+instance AlpmCallback (String -> String -> IO ()) (CString -> CString -> IO ()) where
   wrap f = \cstr1 cstr2 -> do
     str1 <- peekCString cstr1
     str2 <- peekCString cstr2

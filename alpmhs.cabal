@@ -17,7 +17,11 @@ Extra-Source-Files:  README.md
 
 
 Library
-    Build-Depends:     base >= 4.5, bindings-DSL -any, mtl -any, transformers -any
+    Build-Depends:     base               >= 4.5
+                     , bindings-DSL       -any
+                     , mtl                -any
+                     , transformers       -any
+                     , template-haskell   -any
     Extra-Libraries:   alpm
     Hs-Source-Dirs:    lib
     C-Sources:         lib/helper.c
@@ -37,11 +41,12 @@ Library
                      , Distribution.ArchLinux.Libalpm.Wrapper.Util
                      , Distribution.ArchLinux.Libalpm.Wrapper.Options
                      , Distribution.ArchLinux.Libalpm.Wrapper.Callbacks
+                     , Distribution.ArchLinux.Libalpm.Wrapper.TH
     Extensions:        ForeignFunctionInterface, FlexibleInstances,
                        TypeSynonymInstances, MultiParamTypeClasses,
                        ScopedTypeVariables, FunctionalDependencies,
                        GeneralizedNewtypeDeriving, RecordWildCards,
-                       NamedFieldPuns
+                       NamedFieldPuns, ViewPatterns
     GHC-Options:       -O2
 
 Executable halp

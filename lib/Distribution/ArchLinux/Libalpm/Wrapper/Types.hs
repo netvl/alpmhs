@@ -25,8 +25,8 @@ import Distribution.ArchLinux.Libalpm.Wrapper.Util
 
 -- | A configuration value used for ALPM library configuration.
 data AlpmConfig = AlpmConfig {
-    root   :: String,   -- ^ Path to root directory to be used by ALPM ("/" for Archlinux systems)
-    dbPath :: String    -- ^ Path to directory with sync database ("/var/lib/pacman" for Archlinux)
+    root   :: String,   -- ^ Path to root directory to be used by ALPM (@/@ for Archlinux systems)
+    dbPath :: String    -- ^ Path to directory with sync database (@/var/lib/pacman@ for Archlinux)
 }
 
 -- | An error value returned by ALPM functions.
