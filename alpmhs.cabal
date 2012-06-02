@@ -22,6 +22,7 @@ Library
                      , mtl                -any
                      , transformers       -any
                      , template-haskell   -any
+                     , containers         -any
     Extra-Libraries:   alpm
     Hs-Source-Dirs:    lib
     C-Sources:         lib/helper.c
@@ -41,12 +42,14 @@ Library
                      , Distribution.ArchLinux.Libalpm.Wrapper.Util
                      , Distribution.ArchLinux.Libalpm.Wrapper.Options
                      , Distribution.ArchLinux.Libalpm.Wrapper.Callbacks
+                     , Distribution.ArchLinux.Libalpm.Wrapper.Callbacks.Event
                      , Distribution.ArchLinux.Libalpm.Wrapper.TH
     Extensions:        ForeignFunctionInterface, FlexibleInstances,
                        TypeSynonymInstances, MultiParamTypeClasses,
                        ScopedTypeVariables, FunctionalDependencies,
                        GeneralizedNewtypeDeriving, RecordWildCards,
-                       NamedFieldPuns, ViewPatterns
+                       NamedFieldPuns, ViewPatterns, RankNTypes,
+                       ExistentialQuantification
     GHC-Options:       -O2
 
 Executable halp
