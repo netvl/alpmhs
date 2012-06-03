@@ -28,8 +28,8 @@ newtype Alpm a = Alpm { unAlpm :: ErrorT AlpmError (RWST AlpmEnv AlpmLog AlpmSta
 withinAlpmSession :: AlpmConfig   -- ^ configuration for the system
                   -> Alpm a       -- ^ an action to perform
                   -> IO ((Either AlpmError a), AlpmLog)
-withinAlpmSession conf@(AlpmConfig { root, dbPath }) (Alpm act) = do
-  ehandle <- openHandle root dbPath
+withinAlpmSession conf@(AlpmConfig { configRoot, configDbPath }) (Alpm act) = do
+  ehandle <- openHandle configRoot configDbPath
   case ehandle of
     Left err -> return (Left err, mempty)
     Right handle -> do
@@ -38,5 +38,7 @@ withinAlpmSession conf@(AlpmConfig { root, dbPath }) (Alpm act) = do
       evalRWST (runErrorT act) env state
   where
     initState      = return AlpmState
-    initEnv handle = return AlpmEnv { config = conf, handle = handle }
+    initEnv handle = return AlpmEnv { envConfig = conf
+                                    , envHandle = handle
+                                    , envEventCallback = Nothing }
 

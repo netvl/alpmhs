@@ -7,6 +7,7 @@ module Distribution.ArchLinux.Libalpm.Wrapper.Types (
   AlpmState(..),
   AlpmHandle(..),
   AlpmPkg(..),
+  EventCallback,
   openHandle
 ) where
 
@@ -25,32 +26,37 @@ import Distribution.ArchLinux.Libalpm.Wrapper.Util
 
 -- | A configuration value used for ALPM library configuration.
 data AlpmConfig = AlpmConfig {
-    root   :: String,   -- ^ Path to root directory to be used by ALPM (@/@ for Archlinux systems)
-    dbPath :: String    -- ^ Path to directory with sync database (@/var/lib/pacman@ for Archlinux)
+    configRoot   :: String  -- ^ Path to root directory to be used by ALPM
+                            -- (@/@ for Archlinux systems)
+  , configDbPath :: String  -- ^ Path to directory with sync database 
+                            -- (@/var/lib/pacman@ for Archlinux)
 }
 
 -- | An error value returned by ALPM functions.
 data AlpmError = ErrorCode {
-    message :: String,  -- ^ Error message
-    code    :: Int      -- ^ Error code
+    errorMessage :: String  -- ^ Error message
+  , errorCode    :: Int     -- ^ Error code
 }
 
 instance Error AlpmError where
-  noMsg    = ErrorCode { message = "", code = 0 }
-  strMsg s = ErrorCode { message = s, code = 0 }
+  noMsg    = ErrorCode { errorMessage = "", errorCode = 0 }
+  strMsg s = ErrorCode { errorMessage = s, errorCode = 0 }
 
 -- | Converts ALPM error code to its user-readable representation.
 fromAlpmErrno :: C'_alpm_errno_t  -- ^ Error code
               -> AlpmError
 fromAlpmErrno errcode = unsafeLocalState $ do
   str <- peekCString =<< c'alpm_strerror errcode
-  return $ ErrorCode str (fromIntegral errcode)
+  return $ ErrorCode { errorMessage = str, errorCode = (fromIntegral errcode) }
 
 -- | Single log entry.
 data AlpmLogEntry = AlpmLogEntry String
 
 -- | An environment for ALPM actions. Contains read-only data needed for ALPM to operate.
-data AlpmEnv = AlpmEnv { handle :: AlpmHandle, config :: AlpmConfig }
+data AlpmEnv = AlpmEnv { envHandle :: AlpmHandle
+                       , envConfig :: AlpmConfig
+                       , envEventCallback :: Maybe EventCallback
+                       }
 
 -- | Contains log of ALPM operations.
 data AlpmLog = AlpmLog { entries :: [AlpmLogEntry] }
@@ -73,8 +79,8 @@ openHandle root dbPath = alloca $ \errBuf ->
     handlePtr <- c'alpm_initialize rootPtr dbPathPtr errBuf
     err <- peek errBuf
     if err > 0
-      then return $ Left $ fromAlpmErrno err
-      else Right <$> AlpmHandle <$> newForeignPtr p'alpm_handle_finalizer handlePtr
+      then return . Left $ fromAlpmErrno err
+      else Right . AlpmHandle <$> newForeignPtr p'alpm_handle_finalizer handlePtr
 
 newtype AlpmDepend = AlpmDepend (Ptr C'alpm_depend_t)
 newtype AlpmDepmissing = AlpmDepmissing (Ptr C'alpm_depmissing_t)
@@ -88,3 +94,6 @@ newtype AlpmBackup = AlpmBackup (Ptr C'alpm_backup_t)
 newtype AlpmPgpkey = AlpmPgpkey (Ptr C'alpm_pgpkey_t)
 newtype AlpmSigresult = AlpmSigresult (Ptr C'alpm_sigresult_t)
 newtype AlpmSiglist = AlpmSiglist (Ptr C'alpm_siglist_t)
+
+type EventCallback = C'alpm_cb_event
+
