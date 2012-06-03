@@ -29,7 +29,7 @@ data AlpmEventHandlers = AlpmEventHandlers {
     -- | Internal conflicts checks started.
   , _eventInterconflictsStart :: Maybe (IO ())
     -- | Internal conflicts checks finished.
-  , _eventInterconflictsEnd   :: Maybe (IO ())
+  , _eventInterconflictsDone  :: Maybe (IO ())
     -- | Package add procedure started. 'AlpmPkg' argument means the package
     -- being processed.
   , _eventAddStart            :: Maybe (AlpmPkg -> IO ())
@@ -75,6 +75,14 @@ data AlpmEventHandlers = AlpmEventHandlers {
   , _eventDeltaPatchDone      :: Maybe (IO ())
     -- | Single delta patch application failed.
   , _eventDeltaPatchFailed    :: Maybe (IO ())
+    -- | TODO: find description
+  , _eventScriptletInfo       :: Maybe (String -> IO ())
+    -- | Package retrieval started. TODO: find out what first argument means.
+  , _eventRetrieveStart       :: Maybe (String -> IO ())
+    -- | Disk space availability check started.
+  , _eventDiskspaceStart      :: Maybe (IO ())
+    -- | Disk space availability check finished.
+  , _eventDiskspaceDone       :: Maybe (IO ())
 }
 
 generateUpdaters ''AlpmEventHandlers
@@ -105,7 +113,44 @@ instance AlpmEventHandler (String -> String -> IO ()) where
 
 data EventHandler = forall a . AlpmEventHandler a => EventHandler a
 
+data EventHandlerProjector = forall a . AlpmEventHandler a => Projector (AlpmEventHandlers -> Maybe a)
+
 type EventHandlers = M.Map C'alpm_event_t EventHandler
+
+eventCallbacksMapping' :: [(C'alpm_event_t, EventHandlerProjector)]
+eventCallbacksMapping' = [(c'ALPM_EVENT_CHECKDEPS_START, Projector _eventCheckdepsStart)]
+
+--eventCallbacksMapping :: [(C'alpm_event_t, forall a. AlpmEventHandler a => AlpmEventHandlers -> Maybe a)]
+--eventCallbacksMapping = [ (c'ALPM_EVENT_CHECKDEPS_START, _eventCheckdepsStart)
+--                        , (c'ALPM_EVENT_CHECKDEPS_DONE, _eventCheckdepsDone)
+--                        , (c'ALPM_EVENT_FILECONFLICTS_START, _eventFileconflictsStart)
+--                        , (c'ALPM_EVENT_FILECONFLICTS_DONE, _eventFileconflictsDone)
+--                        , (c'ALPM_EVENT_RESOLVEDEPS_START, _eventResolvedepsStart)
+--                        , (c'ALPM_EVENT_RESOLVEDEPS_DONE, _eventResolvedepsDone)
+--                        , (c'ALPM_EVENT_INTERCONFLICTS_START, _eventInterconflictsStart)
+--                        , (c'ALPM_EVENT_INTERCONFLICTS_DONE, _eventInterconflictsDone)
+--                        , (c'ALPM_EVENT_ADD_START, _eventAddStart)
+--                        , (c'ALPM_EVENT_ADD_DONE, _eventAddDone)
+--                        , (c'ALPM_EVENT_REMOVE_START, _eventRemoveStart)
+--                        , (c'ALPM_EVENT_REMOVE_DONE, _eventRemoveDone)
+--                        , (c'ALPM_EVENT_UPGRADE_START, _eventUpgradeStart)
+--                        , (c'ALPM_EVENT_UPGRADE_DONE, _eventUpgradeDone)
+--                        , (c'ALPM_EVENT_INTEGRITY_START, _eventIntegrityStart)
+--                        , (c'ALPM_EVENT_INTEGRITY_DONE, _eventIntegrityDone)
+--                        , (c'ALPM_EVENT_LOAD_START, _eventLoadStart)
+--                        , (c'ALPM_EVENT_LOAD_DONE, _eventLoadDone)
+--                        , (c'ALPM_EVENT_DELTA_INTEGRITY_START, _eventDeltaIntegrityStart)
+--                        , (c'ALPM_EVENT_DELTA_INTEGRITY_DONE, _eventDeltaIntegrityDone)
+--                        , (c'ALPM_EVENT_DELTA_PATCHES_START, _eventDeltaPatchesStart)
+--                        , (c'ALPM_EVENT_DELTA_PATCHES_DONE, _eventDeltaPatchesDone)
+--                        , (c'ALPM_EVENT_DELTA_PATCH_START, _eventDeltaPatchStart)
+--                        , (c'ALPM_EVENT_DELTA_PATCH_DONE, _eventDeltaPatchDone)
+--                        , (c'ALPM_EVENT_DELTA_PATCH_FAILED, _eventDeltaPatchFailed)
+--                        , (c'ALPM_EVENT_SCRIPTLET_INFO, _eventScriptletInfo)
+--                        , (c'ALPM_EVENT_RETRIEVE_START, _eventRetrieveStart)
+--                        , (c'ALPM_EVENT_DISKSPACE_START, _eventDiskspaceStart)
+--                        , (c'ALPM_EVENT_DISKSPACE_DONE, _eventDiskspaceDone)
+--                        ]
 
 -- | Create callback function from a map of handlers.
 makeEventCallback :: EventHandlers         -- ^ A map from event numbers to handlers

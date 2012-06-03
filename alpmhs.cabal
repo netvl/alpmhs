@@ -48,8 +48,8 @@ Library
                        TypeSynonymInstances, MultiParamTypeClasses,
                        ScopedTypeVariables, FunctionalDependencies,
                        GeneralizedNewtypeDeriving, RecordWildCards,
-                       NamedFieldPuns, ViewPatterns, RankNTypes,
-                       ExistentialQuantification
+                       NamedFieldPuns, ExistentialQuantification,
+                       ViewPatterns, RankNTypes, ImpredicativeTypes
     GHC-Options:       -O2
 
 Executable halp
