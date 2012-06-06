@@ -53,7 +53,7 @@ capitalize (c:cs) = toUpper c : cs
 -- | Generate a record value containing 'Nothing' values in all its fields given record type name.
 generateEmptyRecord :: String -- ^ A name for the record value
                     -> Name   -- ^ A name of record type
-                    -> Name   -- ^ A name of record type constructor
+                    -> Name   -- ^ A name of record value constructor
                     -> Q [Dec]
 generateEmptyRecord (mkName -> declname) recname conname = do
   TyConI (DataD _ _ _ ctors _) <- reify recname
