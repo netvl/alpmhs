@@ -1,5 +1,8 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Distribution.ArchLinux.Libalpm.Wrapper.Callbacks.Event where
+module Distribution.ArchLinux.Libalpm.Wrapper.Callbacks.Event (
+  makeEventCallback,
+  module Distribution.ArchLinux.Libalpm.Wrapper.Callbacks.Event.Generated
+) where
 
 import Foreign
 import Foreign.C.String
@@ -9,87 +12,10 @@ import qualified Data.Map as M
 
 import Distribution.ArchLinux.Libalpm.Raw.Types
 import Distribution.ArchLinux.Libalpm.Wrapper.Types
-import Distribution.ArchLinux.Libalpm.Wrapper.TH
+import Distribution.ArchLinux.Libalpm.Wrapper.Callbacks.Event.Generated
 
--- | Contains handlers for event callback to be called when corresponding event is emitted
--- from inside of Libalpm. 'Nothing' means that the event will be ignored, 'Just' value
--- sets the handler. Use 'withEventHandlers' function to set event handlers inside
--- 'Alpm' monad.
-data EventHandlers = EventHandlers {
-    -- | Dependency checks started.
-    _eventCheckdepsStart      :: Maybe (IO ())
-    -- | Dependency checks finished.
-  , _eventCheckdepsDone       :: Maybe (IO ())
-    -- | File conflicts checks started.
-  , _eventFileconflictsStart  :: Maybe (IO ())
-    -- | File conflicts checks finished.
-  , _eventFileconflictsDone   :: Maybe (IO ())
-    -- | Dependency resolving started.
-  , _eventResolvedepsStart    :: Maybe (IO ())
-    -- | Dependency resolving finished.
-  , _eventResolvedepsDone     :: Maybe (IO ())
-    -- | Internal conflicts checks started.
-  , _eventInterconflictsStart :: Maybe (IO ())
-    -- | Internal conflicts checks finished.
-  , _eventInterconflictsDone  :: Maybe (IO ())
-    -- | Package add procedure started. 'AlpmPkg' argument means the package
-    -- being processed.
-  , _eventAddStart            :: Maybe (AlpmPkg -> IO ())
-    -- | Package add procedure finished. 'AlpmPkg' argument means the package
-    -- that just has been added. Note: in fact Libalpm emits this event with two
-    -- 'AlpmPkg' arguments, but it seems that second argument is always null so
-    -- it is not represented here.
-  , _eventAddDone             :: Maybe (AlpmPkg -> IO ())
-    -- | Package removal procedure started. 'AlpmPkg' argument means the package
-    -- being removed.
-  , _eventRemoveStart         :: Maybe (AlpmPkg -> IO ())
-    -- | Package removal procedure finished. 'AlpmPkg' argument means the package
-    -- that just has been removed.
-  , _eventRemoveDone          :: Maybe (AlpmPkg -> IO ())
-    -- | Package upgrade procedure started. First 'AlpmPkg' argument means new
-    -- package that will be installed; second 'AlpmPkg' argument means old package
-    -- that will be replaced.
-  , _eventUpgradeStart        :: Maybe (AlpmPkg -> AlpmPkg -> IO ())
-    -- | Package upgrade procedure finished. First 'AlpmPkg' argument means new
-    -- package that just has been installed; second 'AlpmPkg' argument means old
-    -- package that just has been replaced.
-  , _eventUpgradeDone         :: Maybe (AlpmPkg -> AlpmPkg -> IO ())
-    -- | Integrity checks started.
-  , _eventIntegrityStart      :: Maybe (IO ())
-    -- | Integrity checks finished.
-  , _eventIntegrityDone       :: Maybe (IO ())
-    -- | Package loading started.
-  , _eventLoadStart           :: Maybe (IO ())
-    -- | Package loading finished.
-  , _eventLoadDone            :: Maybe (IO ())
-    -- | Delta integrity checks started.
-  , _eventDeltaIntegrityStart :: Maybe (IO ())
-    -- | Delta integrity checks finished.
-  , _eventDeltaIntegrityDone  :: Maybe (IO ())
-    -- | Delta patches application started.
-  , _eventDeltaPatchesStart   :: Maybe (IO ())
-    -- | Delta patches application finished.
-  , _eventDeltaPatchesDone    :: Maybe (IO ())
-    -- | Single delta patch application started. First 'String' argument is a
-    -- patch destination version; second 'String' argument is delta name (???).
-  , _eventDeltaPatchStart     :: Maybe (String -> String -> IO ())
-    -- | Single delta patch application finished successfully.
-  , _eventDeltaPatchDone      :: Maybe (IO ())
-    -- | Single delta patch application failed.
-  , _eventDeltaPatchFailed    :: Maybe (IO ())
-    -- | TODO: find description
-  , _eventScriptletInfo       :: Maybe (String -> IO ())
-    -- | Package retrieval started. TODO: find out what first argument means.
-  , _eventRetrieveStart       :: Maybe (String -> IO ())
-    -- | Disk space availability check started.
-  , _eventDiskspaceStart      :: Maybe (IO ())
-    -- | Disk space availability check finished.
-  , _eventDiskspaceDone       :: Maybe (IO ())
-}
-
-generateUpdaters ''EventHandlers
-generateEmptyRecord "emptyEventHandlers" ''EventHandlers 'EventHandlers
-
+-- | A type class for converting high-level Haskell functions into theirs low-level C
+-- equivalents. Specific to event callback.
 class EventHandlerFunction a where
   wrap :: a -> (Ptr () -> Ptr () -> IO ())
 
@@ -113,15 +39,22 @@ instance EventHandlerFunction (String -> String -> IO ()) where
     str2 <- peekCString (castPtr ptr2)
     f str1 str2
 
+-- | An existential type denoting a handler function, that is, a function which
+-- can be called from C-level callback.
 data EventHandler = forall a . EventHandlerFunction a => EventHandler a
 
-data EventHandlerProjector = forall a . EventHandlerFunction a => 
+-- | An existential type denoting a projector function, that is, a function which
+-- maps 'EventHandlers' aggregation structure to a handler function, possibly
+-- returning 'Nothing'.
+data EventHandlerProjector = forall a . EventHandlerFunction a =>
                                EventHandlerProjector (EventHandlers -> Maybe a)
 
+-- | A map from event identifiers (foreign 'C'alpm_event_t' integral type) to projector functions.
 type EventHandlersMapping = M.Map C'alpm_event_t EventHandler
 
+-- | An actual mapping from event identifiers to projector functions.
 eventHandlerProjectorsMapping :: [(C'alpm_event_t, EventHandlerProjector)]
-eventHandlerProjectorsMapping = 
+eventHandlerProjectorsMapping =
   [ (c'ALPM_EVENT_CHECKDEPS_START,       EventHandlerProjector _eventCheckdepsStart)
   , (c'ALPM_EVENT_CHECKDEPS_DONE,        EventHandlerProjector _eventCheckdepsDone)
   , (c'ALPM_EVENT_FILECONFLICTS_START,   EventHandlerProjector _eventFileconflictsStart)
@@ -153,17 +86,25 @@ eventHandlerProjectorsMapping =
   , (c'ALPM_EVENT_DISKSPACE_DONE,        EventHandlerProjector _eventDiskspaceDone)
   ]
 
+-- | Converts an event handlers aggregation structure to the map from event identifiers
+-- to event handler functions. It uses 'eventHandlerProjectorsMapping' to extract
+-- corresponding event handlers from the aggregation structure.
 collectEventHandlers :: EventHandlers -> EventHandlersMapping
 collectEventHandlers eh = foldr reductor M.empty eventHandlerProjectorsMapping
   where
     reductor (e, EventHandlerProjector p) m = M.alter (\_ -> EventHandler <$> p eh) e m
 
--- | Create callback function from a map of handlers.
-makeEventCallback :: EventHandlersMapping  -- ^ A map from event numbers to handlers
-                  -> IO EventCallback      -- ^ A callback for event processing created 
-                                           -- from handlers
-makeEventCallback m = mk'alpm_cb_event $ \evt p1 p2 -> do
+-- | Creates callback function from a map from event identifiers to handlers.
+makeEventCallback' :: EventHandlersMapping  -- ^ A map from event numbers to handlers
+                   -> IO EventCallback      -- ^ A callback for event processing created
+                                            -- from handlers
+makeEventCallback' m = mk'alpm_cb_event $ \evt p1 p2 -> do
   case M.lookup evt m of
     Nothing               -> return ()
     Just (EventHandler h) -> (wrap h) p1 p2
+
+-- | Creates callback function from the event handlers aggregation structure.
+makeEventCallback :: EventHandlers       -- ^ an event handlers aggregation structure
+                  -> IO EventCallback    -- ^ a C-level callback
+makeEventCallback = makeEventCallback' . collectEventHandlers
 

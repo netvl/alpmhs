@@ -7,8 +7,12 @@ module Distribution.ArchLinux.Libalpm.Wrapper.Types (
   AlpmState(..),
   AlpmHandle(..),
   AlpmPkg(..),
+  AlpmCallbacks(..),
+  AlpmDepend(..),
+  AlpmPgpkey(..),
   EventCallback,
-  openHandle
+  openHandle,
+  defaultCallbacks
 ) where
 
 import Control.Applicative
@@ -52,11 +56,21 @@ fromAlpmErrno errcode = unsafeLocalState $ do
 -- | Single log entry.
 data AlpmLogEntry = AlpmLogEntry String
 
+-- | An aggregation for all callbacks.
+data AlpmCallbacks = AlpmCallbacks {
+    callbackEvents :: Maybe EventCallback
+}
+
+-- | Default structure with no callbacks set.
+defaultCallbacks :: AlpmCallbacks
+defaultCallbacks = AlpmCallbacks { callbackEvents = Nothing }
+
 -- | An environment for ALPM actions. Contains read-only data needed for ALPM to operate.
-data AlpmEnv = AlpmEnv { envHandle :: AlpmHandle
-                       , envConfig :: AlpmConfig
-                       , envEventCallback :: Maybe EventCallback
-                       }
+data AlpmEnv = AlpmEnv {
+    envHandle :: AlpmHandle
+  , envConfig :: AlpmConfig
+  , envCallbacks :: Maybe AlpmCallbacks
+}
 
 -- | Contains log of ALPM operations.
 data AlpmLog = AlpmLog { entries :: [AlpmLogEntry] }
@@ -73,6 +87,7 @@ newtype AlpmDB = AlpmDB (ForeignPtr C'alpm_db_t)
 newtype AlpmPkg = AlpmPkg (Ptr C'alpm_pkg_t)
 newtype AlpmTrans = AlpmTrans (ForeignPtr C'alpm_trans_t)
 
+-- | Initialize Alpm handle. This should be done once per usage of Libalpm.
 openHandle :: String -> String -> IO (Either AlpmError AlpmHandle)
 openHandle root dbPath = alloca $ \errBuf ->
   withCStrings [root, dbPath] $ \[rootPtr, dbPathPtr] -> do
@@ -95,5 +110,7 @@ newtype AlpmPgpkey = AlpmPgpkey (Ptr C'alpm_pgpkey_t)
 newtype AlpmSigresult = AlpmSigresult (Ptr C'alpm_sigresult_t)
 newtype AlpmSiglist = AlpmSiglist (Ptr C'alpm_siglist_t)
 
+-- | Event callback type.
 type EventCallback = C'alpm_cb_event
+
 

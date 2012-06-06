@@ -40,5 +40,5 @@ withinAlpmSession conf@(AlpmConfig { configRoot, configDbPath }) (Alpm act) = do
     initState      = return AlpmState
     initEnv handle = return AlpmEnv { envConfig = conf
                                     , envHandle = handle
-                                    , envEventCallback = Nothing }
+                                    , envCallbacks = Nothing }
 

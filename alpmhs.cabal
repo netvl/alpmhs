@@ -43,6 +43,9 @@ Library
                      , Distribution.ArchLinux.Libalpm.Wrapper.Options
                      , Distribution.ArchLinux.Libalpm.Wrapper.Callbacks
                      , Distribution.ArchLinux.Libalpm.Wrapper.Callbacks.Event
+                     , Distribution.ArchLinux.Libalpm.Wrapper.Callbacks.Event.Generated
+                     , Distribution.ArchLinux.Libalpm.Wrapper.Callbacks.Question
+                     , Distribution.ArchLinux.Libalpm.Wrapper.Callbacks.Question.Generated
                      , Distribution.ArchLinux.Libalpm.Wrapper.TH
     Extensions:        ForeignFunctionInterface, FlexibleInstances,
                        TypeSynonymInstances, MultiParamTypeClasses,
