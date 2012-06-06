@@ -111,7 +111,8 @@
 -}
 module Distribution.ArchLinux.Libalpm.Wrapper.Callbacks (
   (=:), (=*), disable, disableAll, handlers,
-  module Distribution.ArchLinux.Libalpm.Wrapper.Callbacks.Event
+  module Distribution.ArchLinux.Libalpm.Wrapper.Callbacks.Event,
+  module Distribution.ArchLinux.Libalpm.Wrapper.Callbacks.Question
 ) where
 
 import Foreign
@@ -120,6 +121,7 @@ import Foreign.C.String
 import Distribution.ArchLinux.Libalpm.Wrapper.TH
 
 import Distribution.ArchLinux.Libalpm.Wrapper.Callbacks.Event
+import Distribution.ArchLinux.Libalpm.Wrapper.Callbacks.Question
 
 -- | Adds a handler to the specific callback handlers aggregation structure.
 -- To be used in conjunction with 'handlers'.
